@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'seo' => [
+        'google_site_verification' => env('GOOGLE_SITE_VERIFICATION'),
+        'google_analytics_id' => env('GOOGLE_ANALYTICS_ID'),
+        'default_image' => env('SEO_DEFAULT_IMAGE', 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&h=630&q=80'),
+    ],
+
 ];

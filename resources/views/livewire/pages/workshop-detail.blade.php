@@ -432,3 +432,77 @@
     }
 </script>
 @endpush
+
+@push('schema')
+@php
+    $schemaData = [
+        '@context' => 'https://schema.org',
+        '@graph' => [
+            [
+                '@type' => 'EducationEvent',
+                '@id' => route('workshop.detail', $workshop->slug) . '#event',
+                'name' => $workshop->title,
+                'description' => \Illuminate\Support\Str::limit(strip_tags((string) ($workshop->short_description ?: $workshop->description)), 200),
+                'startDate' => $workshop->start_date ? $workshop->start_date->toIso8601String() : now()->toIso8601String(),
+                'endDate' => $workshop->end_date ? $workshop->end_date->toIso8601String() : ($workshop->start_date ? $workshop->start_date->addHours(3)->toIso8601String() : now()->addHours(3)->toIso8601String()),
+                'eventAttendanceMode' => $workshop->platform === 'offline' ? 'https://schema.org/OfflineEventAttendanceMode' : 'https://schema.org/OnlineEventAttendanceMode',
+                'eventStatus' => 'https://schema.org/EventScheduled',
+                'location' => [
+                    '@type' => $workshop->platform === 'offline' ? 'Place' : 'VirtualLocation',
+                    'name' => $workshop->platform === 'offline' ? 'Gedung Workshop KuliahIlkom' : strtoupper($workshop->platform) . ' Meeting',
+                    'url' => route('workshop.detail', $workshop->slug),
+                ],
+                'image' => [
+                    $workshop->banner_url,
+                ],
+                'organizer' => [
+                    '@type' => 'Organization',
+                    'name' => 'KuliahIlkom',
+                    'url' => 'https://workshop.kuliahilkom.com',
+                    'logo' => asset('images/logo.png'),
+                ],
+                'performer' => [
+                    '@type' => 'Person',
+                    'name' => $workshop->speaker?->name ?? 'Instruktur KuliahIlkom',
+                    'jobTitle' => $workshop->speaker?->title_role ?? 'Software Engineer',
+                ],
+                'offers' => [
+                    '@type' => 'Offer',
+                    'price' => $workshop->is_paid ? (float) $workshop->price : 0,
+                    'priceCurrency' => 'IDR',
+                    'url' => route('workshop.detail', $workshop->slug),
+                    'validFrom' => $workshop->created_at ? $workshop->created_at->toIso8601String() : now()->toIso8601String(),
+                    'availability' => $workshop->isSoldOut() ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock',
+                ],
+            ],
+            [
+                '@type' => 'BreadcrumbList',
+                '@id' => route('workshop.detail', $workshop->slug) . '#breadcrumb',
+                'itemListElement' => [
+                    [
+                        '@type' => 'ListItem',
+                        'position' => 1,
+                        'name' => 'Home',
+                        'item' => route('home'),
+                    ],
+                    [
+                        '@type' => 'ListItem',
+                        'position' => 2,
+                        'name' => $workshop->category?->name ?? 'Workshop',
+                        'item' => route('home') . '?category=' . $workshop->category?->slug,
+                    ],
+                    [
+                        '@type' => 'ListItem',
+                        'position' => 3,
+                        'name' => $workshop->title,
+                        'item' => route('workshop.detail', $workshop->slug),
+                    ],
+                ],
+            ],
+        ],
+    ];
+@endphp
+<script type="application/ld+json">
+{!! json_encode($schemaData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) !!}
+</script>
+@endpush

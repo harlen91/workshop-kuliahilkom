@@ -351,3 +351,70 @@
         </div>
     </section>
 </div>
+
+@push('schema')
+@php
+    $homeSchema = [
+        '@context' => 'https://schema.org',
+        '@graph' => [
+            [
+                '@type' => 'WebSite',
+                '@id' => 'https://workshop.kuliahilkom.com/#website',
+                'url' => 'https://workshop.kuliahilkom.com/',
+                'name' => 'KuliahIlkom Workshop',
+                'description' => 'Platform Workshop & Webinar IT Terdepan di Indonesia',
+                'potentialAction' => [
+                    '@type' => 'SearchAction',
+                    'target' => 'https://workshop.kuliahilkom.com/?q={search_term_string}',
+                    'query-input' => 'required name=search_term_string',
+                ],
+            ],
+            [
+                '@type' => 'Organization',
+                '@id' => 'https://workshop.kuliahilkom.com/#organization',
+                'name' => 'KuliahIlkom',
+                'url' => 'https://workshop.kuliahilkom.com/',
+                'logo' => 'https://workshop.kuliahilkom.com/images/logo.png',
+                'sameAs' => [
+                    'https://www.youtube.com/@kuliahilkom',
+                    'https://t.me/kuliahilkom',
+                    'https://instagram.com/kuliahilkom',
+                ],
+            ],
+            [
+                '@type' => 'FAQPage',
+                '@id' => 'https://workshop.kuliahilkom.com/#faq',
+                'mainEntity' => [
+                    [
+                        '@type' => 'Question',
+                        'name' => 'Bagaimana cara mengakses link Zoom atau Google Meet setelah mendaftar?',
+                        'acceptedAnswer' => [
+                            '@type' => 'Answer',
+                            'text' => 'Setelah pembayaran terkonfirmasi lunas, link room meeting, meeting ID, serta passcode akan otomatis terbuka di portal peserta Anda pada menu Tiket Saya.',
+                        ],
+                    ],
+                    [
+                        '@type' => 'Question',
+                        'name' => 'Metode pembayaran apa saja yang didukung oleh Midtrans?',
+                        'acceptedAnswer' => [
+                            '@type' => 'Answer',
+                            'text' => 'Kami mendukung seluruh kanal pembayaran resmi di Indonesia melalui Midtrans Snap Pop-up: QRIS (GoPay, OVO, ShopeePay, DANA), Virtual Account Bank (BCA, Mandiri, BNI, BRI, Permata), Kartu Kredit/Debit, dan gerai Indomaret/Alfamart.',
+                        ],
+                    ],
+                    [
+                        '@type' => 'Question',
+                        'name' => 'Apakah saya tetap mendapatkan rekaman jika berhalangan hadir saat live?',
+                        'acceptedAnswer' => [
+                            '@type' => 'Answer',
+                            'text' => 'Ya, seluruh peserta yang telah terdaftar berhak mengakses rekaman video Full HD dan seluruh slide atau source code proyek workshop yang akan diunggah pada dashboard peserta pasca acara selesai.',
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ];
+@endphp
+<script type="application/ld+json">
+{!! json_encode($homeSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) !!}
+</script>
+@endpush

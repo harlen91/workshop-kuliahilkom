@@ -12,6 +12,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -231,6 +232,17 @@ class WorkshopDetail extends Component
 
     public function render(): View
     {
-        return view('livewire.pages.workshop-detail');
+        $description = Str::limit(strip_tags((string) ($this->workshop->short_description ?: $this->workshop->description)), 155);
+        $keywords = 'workshop, webinar, '.($this->workshop->category?->name ?? 'IT').', '.($this->workshop->speaker?->name ?? 'KuliahIlkom').', '.$this->workshop->title.', kuliahilkom';
+
+        return view('livewire.pages.workshop-detail')
+            ->layout('layouts.app', [
+                'metaTitle' => $this->workshop->title.' | Workshop & Webinar KuliahIlkom',
+                'metaDescription' => $description,
+                'metaKeywords' => $keywords,
+                'canonicalUrl' => route('workshop.detail', $this->workshop->slug),
+                'ogImage' => $this->workshop->banner_url,
+                'ogType' => 'article',
+            ]);
     }
 }

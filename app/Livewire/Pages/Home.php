@@ -82,6 +82,12 @@ class Home extends Component
             'categories' => $categories,
             'workshops' => $workshops,
             'stats' => $stats,
+        ])->layout('layouts.app', [
+            'metaTitle' => 'Katalog Workshop & Webinar IT Terdepan | KuliahIlkom',
+            'metaDescription' => 'Tingkatkan skill coding, Laravel, AI, database, dan cloud computing bersama praktisi industri. Dapatkan e-sertifikat ber-QR code dan materi rekaman lengkap.',
+            'metaKeywords' => 'workshop IT, webinar programming, kuliahilkom, pelatihan coding online, belajar laravel 12, kursus fullstack indonesia',
+            'canonicalUrl' => route('home'),
+            'ogType' => 'website',
         ]);
     }
 }

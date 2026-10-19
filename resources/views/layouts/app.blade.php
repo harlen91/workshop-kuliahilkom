@@ -5,8 +5,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? 'KuliahIlkom Workshop' }} - Platform Workshop & Webinar IT Terdepan</title>
-    <meta name="description" content="Tingkatkan skill rekayasa perangkat lunak, AI, cloud computing, dan cybersecurity melalui workshop dan webinar interaktif bersama praktisi top industri.">
+    @php
+        $pageTitle = $metaTitle ?? (isset($title) && filled($title) ? $title . ' - KuliahIlkom Workshop' : 'KuliahIlkom Workshop - Platform Workshop & Webinar IT Terdepan');
+        $pageDescription = $metaDescription ?? 'Tingkatkan skill rekayasa perangkat lunak, AI, cloud computing, dan cybersecurity melalui workshop dan webinar interaktif bersama praktisi top industri.';
+        $pageKeywords = $metaKeywords ?? 'workshop IT, webinar coding, kuliahilkom, pelatihan programming, belajar laravel, fullstack developer indonesia, bootcamp online';
+        $pageCanonical = $canonicalUrl ?? url()->current();
+        $pageImage = $ogImage ?? config('services.seo.default_image');
+        $pageType = $ogType ?? 'website';
+        $pageRobots = $metaRobots ?? 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
+    @endphp
+
+    <title>{{ $pageTitle }}</title>
+    <meta name="description" content="{{ $pageDescription }}">
+    <meta name="keywords" content="{{ $pageKeywords }}">
+    <meta name="author" content="KuliahIlkom">
+    <meta name="robots" content="{{ $pageRobots }}">
+    <link rel="canonical" href="{{ $pageCanonical }}">
+
+    <!-- Open Graph / Facebook / WhatsApp -->
+    <meta property="og:site_name" content="KuliahIlkom Workshop">
+    <meta property="og:type" content="{{ $pageType }}">
+    <meta property="og:title" content="{{ $pageTitle }}">
+    <meta property="og:description" content="{{ $pageDescription }}">
+    <meta property="og:url" content="{{ $pageCanonical }}">
+    <meta property="og:image" content="{{ $pageImage }}">
+    <meta property="og:locale" content="id_ID">
+
+    <!-- Twitter / X Cards -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $pageTitle }}">
+    <meta name="twitter:description" content="{{ $pageDescription }}">
+    <meta name="twitter:image" content="{{ $pageImage }}">
+
+    <!-- Search Engine Verification & Analytics -->
+    @if(config('services.seo.google_site_verification'))
+        <meta name="google-site-verification" content="{{ config('services.seo.google_site_verification') }}">
+    @endif
+
+    @if(config('services.seo.google_analytics_id'))
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ config('services.seo.google_analytics_id') }}"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '{{ config('services.seo.google_analytics_id') }}');
+        </script>
+    @endif
+
+    <!-- Schema.org JSON-LD Structured Data Stack -->
+    @stack('schema')
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">

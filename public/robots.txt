@@ -1,2 +1,9 @@
 User-agent: *
-Disallow:
+Allow: /
+Allow: /workshop/
+Disallow: /admin/
+Disallow: /participant/
+Disallow: /api/
+Disallow: /livewire/
+
+Sitemap: https://workshop.kuliahilkom.com/sitemap.xml
