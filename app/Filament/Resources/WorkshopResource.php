@@ -25,6 +25,16 @@ class WorkshopResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Daftar Workshop & Webinar';
 
+    public static function getNavigationBadge(): ?string
+    {
+        return (string) Workshop::whereIn('status', ['published', 'ongoing'])->count();
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'success';
+    }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -285,6 +295,34 @@ class WorkshopResource extends Resource
                     ]),
             ])
             ->actions([
+                Tables\Actions\Action::make('whatsapp_broadcast')
+                    ->label('Broadcast WA')
+                    ->icon('heroicon-o-chat-bubble-left-right')
+                    ->color('info')
+                    ->modalHeading(fn (Workshop $record): string => "Broadcast WhatsApp Peserta: {$record->title}")
+                    ->modalDescription('Salin daftar nomor WhatsApp peserta yang terdaftar untuk blast pesan reminder / materi.')
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Tutup')
+                    ->modalContent(function (Workshop $record) {
+                        $contacts = $record->registrations()->with('user')->get()->map(function ($reg) {
+                            return ($reg->user?->name ?? 'Peserta').' - '.($reg->user?->phone_number ?? 'No HP Kosong');
+                        })->join("\n");
+
+                        $phoneList = $record->registrations()->with('user')->get()->map(function ($reg) {
+                            $phone = preg_replace('/[^0-9]/', '', (string) ($reg->user?->phone_number ?? ''));
+                            if (str_starts_with($phone, '0')) {
+                                $phone = '62'.substr($phone, 1);
+                            }
+
+                            return $phone;
+                        })->filter()->unique()->join(',');
+
+                        return view('filament.modals.workshop-broadcast-info', [
+                            'record' => $record,
+                            'contacts' => $contacts,
+                            'phoneList' => $phoneList,
+                        ]);
+                    }),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
@@ -297,7 +335,8 @@ class WorkshopResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            WorkshopResource\RelationManagers\RegistrationsRelationManager::class,
+            WorkshopResource\RelationManagers\OrdersRelationManager::class,
         ];
     }
 

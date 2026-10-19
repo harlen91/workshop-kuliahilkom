@@ -10,6 +10,8 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class RegistrationResource extends Resource
 {
@@ -24,6 +26,16 @@ class RegistrationResource extends Resource
     protected static ?string $modelLabel = 'Tiket & Presensi Peserta';
 
     protected static ?string $pluralModelLabel = 'Daftar Tiket Peserta';
+
+    public static function getNavigationBadge(): ?string
+    {
+        return (string) Registration::count();
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'primary';
+    }
 
     public static function form(Form $form): Form
     {
@@ -102,24 +114,28 @@ class RegistrationResource extends Resource
                         default => $state,
                     }),
                 Tables\Columns\TextColumn::make('attended_at')
-                    ->label('Waktu Check-in')
+                    ->label('Waktu Hadir')
                     ->dateTime('d M Y, H:i')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('certificate_code')
                     ->label('No. Sertifikat')
                     ->badge()
                     ->color('primary')
+                    ->copyable()
                     ->placeholder('-'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Waktu Daftar')
                     ->dateTime('d M Y, H:i')
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
                 Tables\Filters\SelectFilter::make('workshop')
                     ->label('Filter Event')
-                    ->relationship('workshop', 'title'),
+                    ->relationship('workshop', 'title')
+                    ->searchable()
+                    ->preload(),
                 Tables\Filters\SelectFilter::make('attendance_status')
                     ->label('Status Kehadiran')
                     ->options([
@@ -127,7 +143,69 @@ class RegistrationResource extends Resource
                         'not_attended' => 'Belum Hadir',
                     ]),
             ])
+            ->headerActions([
+                Tables\Actions\Action::make('export_csv')
+                    ->label('Export Semua Tiket (CSV)')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success')
+                    ->action(function (): StreamedResponse {
+                        $registrations = Registration::with(['user', 'workshop'])->orderBy('id', 'desc')->get();
+
+                        return response()->streamDownload(function () use ($registrations): void {
+                            $handle = fopen('php://output', 'w');
+                            fwrite($handle, "\xEF\xBB\xBF");
+                            fputcsv($handle, ['No', 'Kode Tiket', 'Nama Peserta', 'Email', 'No. WhatsApp', 'Institusi', 'Event Workshop', 'Status Presensi', 'Waktu Presensi', 'No. Sertifikat', 'Tanggal Daftar']);
+
+                            $no = 1;
+                            foreach ($registrations as $reg) {
+                                fputcsv($handle, [
+                                    $no++,
+                                    $reg->ticket_code,
+                                    $reg->user?->name ?? '-',
+                                    $reg->user?->email ?? '-',
+                                    $reg->user?->phone_number ?? '-',
+                                    $reg->user?->institution ?? '-',
+                                    $reg->workshop?->title ?? '-',
+                                    $reg->attendance_status === 'attended' ? 'Hadir' : 'Belum Hadir',
+                                    $reg->attended_at ? $reg->attended_at->format('Y-m-d H:i:s') : '-',
+                                    $reg->certificate_code ?? '-',
+                                    $reg->created_at ? $reg->created_at->format('Y-m-d H:i:s') : '-',
+                                ]);
+                            }
+                            fclose($handle);
+                        }, 'data-tiket-peserta-'.now()->format('YmdHis').'.csv', [
+                            'Content-Type' => 'text/csv; charset=UTF-8',
+                        ]);
+                    }),
+            ])
             ->actions([
+                Tables\Actions\Action::make('preview_ticket')
+                    ->label('Lihat Tiket')
+                    ->icon('heroicon-o-qr-code')
+                    ->color('primary')
+                    ->modalHeading(fn (Registration $record): string => "E-Tiket: {$record->ticket_code}")
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Tutup')
+                    ->modalContent(fn (Registration $record) => view('filament.modals.ticket-preview', [
+                        'record' => $record,
+                    ])),
+
+                Tables\Actions\Action::make('whatsapp')
+                    ->label('Chat WA')
+                    ->icon('heroicon-o-chat-bubble-left-right')
+                    ->color('info')
+                    ->visible(fn (Registration $record): bool => ! empty($record->user?->phone_number))
+                    ->url(function (Registration $record): string {
+                        $phone = preg_replace('/[^0-9]/', '', (string) $record->user->phone_number);
+                        if (str_starts_with($phone, '0')) {
+                            $phone = '62'.substr($phone, 1);
+                        }
+                        $workshop = $record->workshop;
+                        $text = "Halo {$record->user->name}, tiket event '{$workshop?->title}' Anda telah terdaftar. Kode Tiket: {$record->ticket_code}.";
+
+                        return "https://wa.me/{$phone}?text=".urlencode($text);
+                    }, shouldOpenInNewTab: true),
+
                 Tables\Actions\Action::make('checkIn')
                     ->label('Check-In')
                     ->icon('heroicon-o-check-circle')
@@ -142,10 +220,53 @@ class RegistrationResource extends Resource
                             ->success()
                             ->send();
                     }),
+
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('bulk_checkin')
+                        ->label('Tandai Hadir Terpilih')
+                        ->icon('heroicon-o-check-badge')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->action(function (Collection $records): void {
+                            $records->each(fn (Registration $r) => $r->markAttended());
+                            Notification::make()
+                                ->title(count($records).' peserta berhasil di-check in')
+                                ->success()
+                                ->send();
+                        }),
+                    Tables\Actions\BulkAction::make('bulk_export')
+                        ->label('Export Terpilih (CSV)')
+                        ->icon('heroicon-o-arrow-down-tray')
+                        ->color('info')
+                        ->action(function (Collection $records): StreamedResponse {
+                            return response()->streamDownload(function () use ($records): void {
+                                $handle = fopen('php://output', 'w');
+                                fwrite($handle, "\xEF\xBB\xBF");
+                                fputcsv($handle, ['No', 'Kode Tiket', 'Nama Peserta', 'Email', 'No. WhatsApp', 'Institusi', 'Event Workshop', 'Status Presensi', 'Waktu Presensi', 'No. Sertifikat']);
+
+                                $no = 1;
+                                foreach ($records as $reg) {
+                                    fputcsv($handle, [
+                                        $no++,
+                                        $reg->ticket_code,
+                                        $reg->user?->name ?? '-',
+                                        $reg->user?->email ?? '-',
+                                        $reg->user?->phone_number ?? '-',
+                                        $reg->user?->institution ?? '-',
+                                        $reg->workshop?->title ?? '-',
+                                        $reg->attendance_status === 'attended' ? 'Hadir' : 'Belum Hadir',
+                                        $reg->attended_at ? $reg->attended_at->format('Y-m-d H:i:s') : '-',
+                                        $reg->certificate_code ?? '-',
+                                    ]);
+                                }
+                                fclose($handle);
+                            }, 'export-tiket-terpilih-'.now()->format('YmdHis').'.csv', [
+                                'Content-Type' => 'text/csv; charset=UTF-8',
+                            ]);
+                        }),
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);

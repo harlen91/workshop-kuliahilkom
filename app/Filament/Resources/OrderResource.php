@@ -11,6 +11,8 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OrderResource extends Resource
 {
@@ -25,6 +27,23 @@ class OrderResource extends Resource
     protected static ?string $modelLabel = 'Transaksi Pembayaran';
 
     protected static ?string $pluralModelLabel = 'Daftar Transaksi';
+
+    public static function getNavigationBadge(): ?string
+    {
+        $pendingCount = Order::where('status', 'pending')->count();
+
+        return $pendingCount > 0 ? (string) $pendingCount : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'Menunggu konfirmasi pembayaran';
+    }
 
     public static function form(Form $form): Form
     {
@@ -135,7 +154,52 @@ class OrderResource extends Resource
                         'failed' => 'Failed',
                     ]),
             ])
+            ->headerActions([
+                Tables\Actions\Action::make('export_csv')
+                    ->label('Export Rekap Keuangan (CSV)')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success')
+                    ->action(function (): StreamedResponse {
+                        $orders = Order::with(['user', 'workshop'])->orderBy('id', 'desc')->get();
+
+                        return response()->streamDownload(function () use ($orders): void {
+                            $handle = fopen('php://output', 'w');
+                            fwrite($handle, "\xEF\xBB\xBF");
+                            fputcsv($handle, ['No', 'No. Invoice', 'Nama Peserta', 'Email', 'No. WhatsApp', 'Event / Workshop', 'Nominal (IDR)', 'Status', 'Metode Pembayaran', 'Waktu Lunas', 'Tanggal Order']);
+
+                            $no = 1;
+                            foreach ($orders as $order) {
+                                fputcsv($handle, [
+                                    $no++,
+                                    $order->order_code,
+                                    $order->user?->name ?? '-',
+                                    $order->user?->email ?? '-',
+                                    $order->user?->phone_number ?? '-',
+                                    $order->workshop?->title ?? '-',
+                                    $order->amount,
+                                    strtoupper($order->status),
+                                    $order->payment_type ?? 'ONLINE',
+                                    $order->paid_at ? $order->paid_at->format('Y-m-d H:i:s') : '-',
+                                    $order->created_at ? $order->created_at->format('Y-m-d H:i:s') : '-',
+                                ]);
+                            }
+                            fclose($handle);
+                        }, 'laporan-keuangan-transaksi-'.now()->format('YmdHis').'.csv', [
+                            'Content-Type' => 'text/csv; charset=UTF-8',
+                        ]);
+                    }),
+            ])
             ->actions([
+                Tables\Actions\Action::make('view_invoice')
+                    ->label('Invoice')
+                    ->icon('heroicon-o-document-text')
+                    ->color('info')
+                    ->modalHeading(fn (Order $record): string => "Invoice Pembayaran: {$record->order_code}")
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Tutup')
+                    ->modalContent(fn (Order $record) => view('filament.modals.order-invoice-preview', [
+                        'record' => $record,
+                    ])),
                 Tables\Actions\Action::make('markAsPaid')
                     ->label('Tandai Lunas')
                     ->icon('heroicon-o-check-badge')
@@ -176,6 +240,36 @@ class OrderResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('bulk_export')
+                        ->label('Export Terpilih (CSV)')
+                        ->icon('heroicon-o-arrow-down-tray')
+                        ->color('info')
+                        ->action(function (Collection $records): StreamedResponse {
+                            return response()->streamDownload(function () use ($records): void {
+                                $handle = fopen('php://output', 'w');
+                                fwrite($handle, "\xEF\xBB\xBF");
+                                fputcsv($handle, ['No', 'No. Invoice', 'Nama Peserta', 'Email', 'No. WhatsApp', 'Event / Workshop', 'Nominal (IDR)', 'Status', 'Metode Pembayaran', 'Waktu Lunas']);
+
+                                $no = 1;
+                                foreach ($records as $order) {
+                                    fputcsv($handle, [
+                                        $no++,
+                                        $order->order_code,
+                                        $order->user?->name ?? '-',
+                                        $order->user?->email ?? '-',
+                                        $order->user?->phone_number ?? '-',
+                                        $order->workshop?->title ?? '-',
+                                        $order->amount,
+                                        strtoupper($order->status),
+                                        $order->payment_type ?? 'ONLINE',
+                                        $order->paid_at ? $order->paid_at->format('Y-m-d H:i:s') : '-',
+                                    ]);
+                                }
+                                fclose($handle);
+                            }, 'export-transaksi-terpilih-'.now()->format('YmdHis').'.csv', [
+                                'Content-Type' => 'text/csv; charset=UTF-8',
+                            ]);
+                        }),
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
