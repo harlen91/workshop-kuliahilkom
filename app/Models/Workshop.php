@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -190,5 +191,116 @@ class Workshop extends Model
         }
 
         return Storage::disk('public')->url($this->banner_path);
+    }
+
+    /**
+     * Ensure meeting_url always has valid http/https protocol scheme.
+     *
+     * @return Attribute<string|null, string|null>
+     */
+    protected function meetingUrl(): Attribute
+    {
+        return Attribute::make(
+            get: function (?string $value): ?string {
+                if (empty($value) || trim($value) === '#' || trim($value) === '') {
+                    return null;
+                }
+
+                $url = trim($value);
+
+                if (! str_starts_with($url, 'http://') && ! str_starts_with($url, 'https://')) {
+                    return 'https://'.ltrim($url, '/');
+                }
+
+                return $url;
+            },
+            set: function (?string $value): ?string {
+                if (empty($value) || trim($value) === '#' || trim($value) === '') {
+                    return null;
+                }
+
+                $url = trim($value);
+
+                if (! str_starts_with($url, 'http://') && ! str_starts_with($url, 'https://')) {
+                    return 'https://'.ltrim($url, '/');
+                }
+
+                return $url;
+            }
+        );
+    }
+
+    /**
+     * Ensure recording_url always has valid http/https protocol scheme.
+     *
+     * @return Attribute<string|null, string|null>
+     */
+    protected function recordingUrl(): Attribute
+    {
+        return Attribute::make(
+            get: function (?string $value): ?string {
+                if (empty($value) || trim($value) === '#' || trim($value) === '') {
+                    return null;
+                }
+
+                $url = trim($value);
+
+                if (! str_starts_with($url, 'http://') && ! str_starts_with($url, 'https://')) {
+                    return 'https://'.ltrim($url, '/');
+                }
+
+                return $url;
+            },
+            set: function (?string $value): ?string {
+                if (empty($value) || trim($value) === '#' || trim($value) === '') {
+                    return null;
+                }
+
+                $url = trim($value);
+
+                if (! str_starts_with($url, 'http://') && ! str_starts_with($url, 'https://')) {
+                    return 'https://'.ltrim($url, '/');
+                }
+
+                return $url;
+            }
+        );
+    }
+
+    /**
+     * Ensure materials_url always has valid http/https protocol scheme.
+     *
+     * @return Attribute<string|null, string|null>
+     */
+    protected function materialsUrl(): Attribute
+    {
+        return Attribute::make(
+            get: function (?string $value): ?string {
+                if (empty($value) || trim($value) === '#' || trim($value) === '') {
+                    return null;
+                }
+
+                $url = trim($value);
+
+                if (! str_starts_with($url, 'http://') && ! str_starts_with($url, 'https://')) {
+                    return 'https://'.ltrim($url, '/');
+                }
+
+                return $url;
+            },
+            set: function (?string $value): ?string {
+                if (empty($value) || trim($value) === '#' || trim($value) === '') {
+                    return null;
+                }
+
+                $url = trim($value);
+
+                if (! str_starts_with($url, 'http://') && ! str_starts_with($url, 'https://')) {
+                    return 'https://'.ltrim($url, '/');
+                }
+
+                return $url;
+            }
+        );
     }
 }

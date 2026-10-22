@@ -126,4 +126,73 @@ class WorkshopRegistrationTest extends TestCase
         $response->assertSee('Nomor WhatsApp');
         $response->assertSee('Password default');
     }
+
+    public function test_meeting_url_attribute_normalizes_links_without_http_protocol(): void
+    {
+        $workshop = new Workshop([
+            'meeting_url' => 'meet.google.com/xyz-1234-abc',
+        ]);
+
+        $this->assertEquals('https://meet.google.com/xyz-1234-abc', $workshop->meeting_url);
+
+        $emptyWorkshop = new Workshop([
+            'meeting_url' => '#',
+        ]);
+        $this->assertNull($emptyWorkshop->meeting_url);
+    }
+
+    public function test_ticket_view_shows_room_link_when_provided_and_notice_when_empty(): void
+    {
+        $user = User::factory()->create();
+
+        $workshopWithLink = Workshop::create([
+            'title' => 'Gmeet Workshop',
+            'slug' => 'gmeet-workshop',
+            'platform' => 'gmeet',
+            'meeting_url' => 'meet.google.com/abc-def-ghi',
+            'start_date' => now()->addDays(1),
+            'end_date' => now()->addDays(1)->addHours(2),
+            'status' => 'published',
+            'is_paid' => false,
+            'price' => 0,
+        ]);
+
+        Registration::create([
+            'user_id' => $user->id,
+            'workshop_id' => $workshopWithLink->id,
+            'ticket_code' => 'TKT-GMEET-01',
+            'attendance_status' => 'not_attended',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('participant.tickets'));
+        $response->assertStatus(200);
+        $response->assertSee('href="https://meet.google.com/abc-def-ghi"', false);
+        $response->assertSee('Masuk ke Room Gmeet');
+
+        // Test with empty meeting link
+        $workshopNoLink = Workshop::create([
+            'title' => 'Pending Meet Workshop',
+            'slug' => 'pending-meet-workshop',
+            'platform' => 'gmeet',
+            'meeting_url' => null,
+            'start_date' => now()->addDays(2),
+            'end_date' => now()->addDays(2)->addHours(2),
+            'status' => 'published',
+            'is_paid' => false,
+            'price' => 0,
+        ]);
+
+        Registration::create([
+            'user_id' => $user->id,
+            'workshop_id' => $workshopNoLink->id,
+            'ticket_code' => 'TKT-GMEET-02',
+            'attendance_status' => 'not_attended',
+        ]);
+
+        $response2 = $this->actingAs($user)->get(route('participant.tickets'));
+        $response2->assertStatus(200);
+        $response2->assertSee('Link room Gmeet belum disematkan');
+        // Ensure fake href="#" is NOT rendered
+        $response2->assertDontSee('href="#"', false);
+    }
 }

@@ -136,8 +136,8 @@ class WorkshopResource extends Resource
                                         ->required(),
                                     Forms\Components\TextInput::make('meeting_url')
                                         ->label('Link Akses / URL Meeting')
-                                        ->placeholder('https://zoom.us/j/...')
-                                        ->helperText('Terkunci! Hanya dapat dilihat oleh peserta yang terdaftar & lunas.'),
+                                        ->placeholder('https://meet.google.com/... atau https://zoom.us/j/...')
+                                        ->helperText('Link ruang meeting virtual. Sistem otomatis menambahkan https:// jika tidak disertakan.'),
                                     Forms\Components\TextInput::make('meeting_password')
                                         ->label('Passcode / Password Meeting')
                                         ->helperText('Password untuk join room (opsional).'),

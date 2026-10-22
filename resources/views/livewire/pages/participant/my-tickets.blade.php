@@ -175,16 +175,26 @@
                                     </div>
 
                                     <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                                        <a 
-                                            href="{{ $ws->meeting_url ?: '#' }}" 
-                                            target="_blank" 
-                                            class="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-sm shadow-indigo-600/25 transition-all"
-                                        >
-                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                            </svg>
-                                            <span>Masuk ke Room {{ ucfirst($ws->platform) }}</span>
-                                        </a>
+                                        @if($ws->meeting_url)
+                                            <a 
+                                                href="{{ $ws->meeting_url }}" 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                class="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-sm shadow-indigo-600/25 transition-all"
+                                            >
+                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                </svg>
+                                                <span>Masuk ke Room {{ ucfirst($ws->platform) }}</span>
+                                            </a>
+                                        @else
+                                            <div class="inline-flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-200 px-4 py-2.5 text-xs font-semibold text-amber-800">
+                                                <svg class="h-4 w-4 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                </svg>
+                                                <span>Link room {{ ucfirst($ws->platform) }} belum disematkan / akan dibagikan menjelang acara</span>
+                                            </div>
+                                        @endif
 
                                         @if($ws->meeting_password)
                                             <div class="flex items-center justify-between rounded-xl bg-white border border-slate-200 px-3.5 py-2 text-xs shadow-2xs" x-data="{ copied: false }">
