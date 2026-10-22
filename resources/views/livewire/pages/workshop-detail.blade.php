@@ -96,7 +96,15 @@
                 <div class="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-xs">
                     <h2 class="text-xl font-bold text-slate-900 mb-4">Silabus & Materi Workshop</h2>
                     <div class="prose max-w-none text-slate-700 text-sm sm:text-base leading-relaxed">
-                        {!! nl2br(e($workshop->description)) !!}
+                        @php
+                            $desc = (string) ($workshop->description ?? '');
+                            $hasHtml = strip_tags($desc) !== $desc;
+                        @endphp
+                        @if($hasHtml)
+                            {!! $desc !!}
+                        @else
+                            {!! \Illuminate\Support\Str::markdown($desc) !!}
+                        @endif
                     </div>
                 </div>
 

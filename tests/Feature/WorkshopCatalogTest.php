@@ -80,4 +80,27 @@ class WorkshopCatalogTest extends TestCase
         $response->assertSee('Jane Smith');
         $response->assertSee('Rp 99.000');
     }
+
+    public function test_workshop_detail_renders_html_description_without_escaping_tags(): void
+    {
+        $workshop = Workshop::create([
+            'title' => 'Refactoring Skripsi Test',
+            'slug' => 'refactoring-skripsi-test',
+            'type' => 'workshop',
+            'start_date' => now()->addDays(2),
+            'end_date' => now()->addDays(2)->addHours(2),
+            'status' => 'published',
+            'is_paid' => false,
+            'price' => 0,
+            'description' => '<p>🎓 <strong>WORKSHOP ONLINE: REFACTORING SKRIPSI</strong></p><p>Optimalkan riset.</p>',
+        ]);
+
+        $response = $this->get('/workshop/'.$workshop->slug);
+
+        $response->assertStatus(200);
+        // Ensure literal raw HTML tags are NOT printed as escaped text entities
+        $response->assertDontSee('&lt;p&gt;', false);
+        $response->assertDontSee('&lt;strong&gt;', false);
+        $response->assertSee('<p>🎓 <strong>WORKSHOP ONLINE: REFACTORING SKRIPSI</strong></p>', false);
+    }
 }
