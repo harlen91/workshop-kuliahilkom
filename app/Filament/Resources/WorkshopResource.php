@@ -209,6 +209,41 @@ class WorkshopResource extends Resource
                                     ->placeholder('https://github.com/... atau Google Drive')
                                     ->columnSpanFull(),
                             ]),
+
+                        Forms\Components\Tabs\Tab::make('Presensi & Kehadiran')
+                            ->icon('heroicon-o-check-badge')
+                            ->schema([
+                                Forms\Components\Grid::make(2)->schema([
+                                    Forms\Components\Select::make('attendance_mode')
+                                        ->label('Metode Presensi Peserta')
+                                        ->options([
+                                            'token' => 'Mode Token Sesi (Peserta input kode token dari instruktur)',
+                                            'join_room' => 'Mode Auto-Presensi (Otomatis hadir saat klik Masuk ke Room)',
+                                            'qr_code' => 'Mode Scan QR Code (Verifikasi scan tiket panitia / offline)',
+                                        ])
+                                        ->default('token')
+                                        ->required()
+                                        ->live()
+                                        ->helperText('Pilih bagaimana peserta mencatatkan kehadirannya untuk mendapatkan e-sertifikat.'),
+                                    Forms\Components\Toggle::make('attendance_is_active')
+                                        ->label('Buka Gerbang Presensi')
+                                        ->helperText('Aktifkan agar peserta dapat klaim presensi. Matikan jika belum waktunya absensi.')
+                                        ->default(true),
+                                ]),
+                                Forms\Components\TextInput::make('attendance_token')
+                                    ->label('Kode Token Presensi Sesi')
+                                    ->placeholder('Contoh: ILKOM2026 atau klik tombol Generate')
+                                    ->helperText('Bagikan kode token ini ke peserta di akhir sesi webinar.')
+                                    ->visible(fn (Forms\Get $get): bool => ($get('attendance_mode') ?? 'token') === 'token')
+                                    ->suffixAction(
+                                        Forms\Components\Actions\Action::make('generateToken')
+                                            ->icon('heroicon-m-arrow-path')
+                                            ->tooltip('Buat Token Acak')
+                                            ->action(function (Forms\Set $set): void {
+                                                $set('attendance_token', 'ILKOM-'.strtoupper(Str::random(5)));
+                                            })
+                                    ),
+                            ]),
                     ])
                     ->columnSpanFull(),
             ]);
@@ -273,6 +308,22 @@ class WorkshopResource extends Resource
                         'cancelled' => 'danger',
                         default => 'gray',
                     }),
+                Tables\Columns\TextColumn::make('attendance_mode')
+                    ->label('Mode Presensi')
+                    ->badge()
+                    ->color(fn (?string $state): string => match ($state) {
+                        'token' => 'info',
+                        'join_room' => 'success',
+                        'qr_code' => 'warning',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        'token' => 'Token Sesi',
+                        'join_room' => 'Auto Room',
+                        'qr_code' => 'Scan QR',
+                        default => ucfirst((string) $state),
+                    })
+                    ->toggleable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('category')

@@ -42,6 +42,9 @@ class Workshop extends Model
         'certificate_enabled',
         'recording_url',
         'materials_url',
+        'attendance_mode',
+        'attendance_token',
+        'attendance_is_active',
     ];
 
     /**
@@ -58,6 +61,7 @@ class Workshop extends Model
             'quota' => 'integer',
             'remaining_quota' => 'integer',
             'certificate_enabled' => 'boolean',
+            'attendance_is_active' => 'boolean',
         ];
     }
 
@@ -302,5 +306,49 @@ class Workshop extends Model
                 return $url;
             }
         );
+    }
+
+    /**
+     * Determine whether attendance is currently open for participants.
+     */
+    public function isAttendanceOpen(): bool
+    {
+        return (bool) $this->attendance_is_active;
+    }
+
+    /**
+     * Determine whether a given token matches the workshop attendance token.
+     */
+    public function isAttendanceTokenValid(?string $token): bool
+    {
+        if (empty($this->attendance_token) || empty($token)) {
+            return false;
+        }
+
+        return trim(strtoupper((string) $token)) === trim(strtoupper((string) $this->attendance_token));
+    }
+
+    /**
+     * Determine whether workshop uses Token Attendance mode.
+     */
+    public function isTokenAttendance(): bool
+    {
+        return ($this->attendance_mode ?? 'token') === 'token';
+    }
+
+    /**
+     * Determine whether workshop uses Join Room Attendance mode.
+     */
+    public function isJoinRoomAttendance(): bool
+    {
+        return ($this->attendance_mode ?? '') === 'join_room';
+    }
+
+    /**
+     * Determine whether workshop uses QR Code Attendance mode.
+     */
+    public function isQrAttendance(): bool
+    {
+        return ($this->attendance_mode ?? '') === 'qr_code';
     }
 }
