@@ -68,6 +68,8 @@ class WorkshopRegistrationTest extends TestCase
         $this->assertTrue(Hash::check('08123456789', $createdUser->password));
 
         $this->assertEquals(49, $workshop->fresh()->remaining_quota);
+        $this->assertEquals('budi.santoso@example.com', session('account_created_notice')['email'] ?? null);
+        $this->assertEquals('08123456789', session('account_created_notice')['phone'] ?? null);
     }
 
     public function test_authenticated_participant_can_view_their_ticket(): void
@@ -75,6 +77,7 @@ class WorkshopRegistrationTest extends TestCase
         $user = User::factory()->create([
             'name' => 'Siti Nurhaliza',
             'email' => 'siti@example.com',
+            'phone_number' => '081298765432',
         ]);
 
         $workshop = Workshop::create([
@@ -97,11 +100,30 @@ class WorkshopRegistrationTest extends TestCase
             'attendance_status' => 'not_attended',
         ]);
 
-        $response = $this->actingAs($user)->get(route('participant.tickets'));
+        $response = $this->actingAs($user)
+            ->withSession([
+                'account_created_notice' => [
+                    'email' => $user->email,
+                    'phone' => $user->phone_number,
+                ],
+            ])
+            ->get(route('participant.tickets'));
 
         $response->assertStatus(200);
         $response->assertSee('TKT-TEST-001');
         $response->assertSee('Fullstack Laravel Bootcamp');
         $response->assertSee('zoomPass123');
+        $response->assertSee('Informasi Akun Login Portal Peserta');
+        $response->assertSee($user->email);
+        $response->assertSee($user->phone_number);
+    }
+
+    public function test_login_page_displays_default_password_hint(): void
+    {
+        $response = $this->get(route('login'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Nomor WhatsApp');
+        $response->assertSee('Password default');
     }
 }

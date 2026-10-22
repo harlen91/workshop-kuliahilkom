@@ -2,12 +2,61 @@
     <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <!-- Flash Alert -->
         @if(session()->has('success'))
-            <div class="mb-8 rounded-2xl bg-emerald-50 border border-emerald-200 p-4 text-emerald-800 flex items-center justify-between shadow-2xs">
+            <div class="mb-6 rounded-2xl bg-emerald-50 border border-emerald-200 p-4 text-emerald-800 flex items-center justify-between shadow-2xs">
                 <div class="flex items-center gap-3">
                     <svg class="h-5 w-5 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span class="text-xs sm:text-sm font-medium">{{ session('success') }}</span>
+                </div>
+            </div>
+        @endif
+
+        @if(session()->has('account_created_notice'))
+            @php $accNotice = session('account_created_notice'); @endphp
+            <div x-data="{ show: true }" x-show="show" x-transition class="mb-8 overflow-hidden rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-50 via-white to-purple-50 p-5 sm:p-6 shadow-sm">
+                <div class="flex items-start justify-between gap-4">
+                    <div class="flex items-start gap-3.5">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-600/20">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-sm sm:text-base font-bold text-slate-900">
+                                Informasi Akun Login Portal Peserta
+                            </h2>
+                            <p class="text-xs sm:text-sm text-slate-600 mt-1">
+                                Akun portal Anda otomatis dibuatkan. Simpan kredensial ini untuk login kembali ke portal di lain waktu atau lewat perangkat lain:
+                            </p>
+
+                            <div class="mt-3.5 flex flex-wrap items-center gap-2.5 text-xs sm:text-sm">
+                                <div class="inline-flex items-center gap-1.5 rounded-xl bg-white border border-slate-200 px-3 py-1.5 shadow-2xs">
+                                    <span class="text-slate-500 font-medium">Email:</span>
+                                    <strong class="font-semibold text-slate-900">{{ $accNotice['email'] ?? auth()->user()?->email }}</strong>
+                                </div>
+                                <div class="inline-flex items-center gap-1.5 rounded-xl bg-indigo-100/70 border border-indigo-200 px-3 py-1.5 text-indigo-950 shadow-2xs">
+                                    <span class="text-indigo-700 font-medium">Password Default:</span>
+                                    <strong class="font-mono font-bold text-indigo-900">{{ $accNotice['phone'] ?? auth()->user()?->phone_number }}</strong>
+                                    <span class="text-[11px] text-indigo-600 font-normal">(Nomor WhatsApp)</span>
+                                </div>
+                            </div>
+
+                            <p class="mt-2.5 text-[11px] text-slate-500">
+                                💡 <em>Tips: Gunakan kombinasi Email dan Nomor WhatsApp di atas jika Anda ingin masuk kembali melalui halaman Login.</em>
+                            </p>
+                        </div>
+                    </div>
+                    <button 
+                        type="button"
+                        @click="show = false" 
+                        class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors shrink-0"
+                        title="Tutup informasi"
+                    >
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
                 </div>
             </div>
         @endif

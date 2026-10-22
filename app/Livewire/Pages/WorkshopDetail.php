@@ -33,6 +33,8 @@ class WorkshopDetail extends Component
 
     public bool $isRegistered = false;
 
+    public bool $isNewAccount = false;
+
     public ?Registration $registeredTicket = null;
 
     public ?string $errorMessage = null;
@@ -116,6 +118,7 @@ class WorkshopDetail extends Component
                     'password' => Hash::make($this->phone_number),
                     'role' => 'participant',
                 ]);
+                $this->isNewAccount = true;
             } else {
                 // Update phone / institution if missing
                 $user->update([
@@ -156,6 +159,14 @@ class WorkshopDetail extends Component
 
             $this->showRegisterModal = false;
             session()->flash('success', 'Selamat! Pendaftaran gratis Anda berhasil dikonfirmasi. Tiket dan link Zoom telah tersedia di bawah.');
+
+            if ($this->isNewAccount || ($user->created_at && $user->created_at->diffInMinutes(now()) <= 15)) {
+                session()->flash('account_created_notice', [
+                    'email' => $user->email,
+                    'phone' => $user->phone_number,
+                ]);
+            }
+
             $this->redirectRoute('participant.tickets');
 
             return;
@@ -181,6 +192,13 @@ class WorkshopDetail extends Component
                 $order->update(['snap_token' => null]);
             }
 
+            if ($this->isNewAccount) {
+                session()->put('new_account_'.$order->order_code, [
+                    'email' => $user->email,
+                    'phone' => $user->phone_number,
+                ]);
+            }
+
             $snapToken = $midtransService->createSnapToken($order);
 
             // Dispatch browser event to invoke Midtrans Snap popup
@@ -199,7 +217,7 @@ class WorkshopDetail extends Component
      */
     public function handlePaymentSuccess(string $orderCode): void
     {
-        $order = Order::where('order_code', $orderCode)->first();
+        $order = Order::with(['user', 'workshop'])->where('order_code', $orderCode)->first();
 
         if ($order) {
             if ($order->status !== 'paid') {
@@ -226,6 +244,15 @@ class WorkshopDetail extends Component
             }
 
             session()->flash('success', 'Pembayaran berhasil! Tiket workshop Anda telah resmi terbit.');
+
+            $newAccountData = session()->pull('new_account_'.$order->order_code);
+            if ($this->isNewAccount || $newAccountData || ($order->user && $order->user->created_at?->diffInMinutes(now()) <= 30)) {
+                session()->flash('account_created_notice', [
+                    'email' => $newAccountData['email'] ?? $order->user?->email,
+                    'phone' => $newAccountData['phone'] ?? $order->user?->phone_number,
+                ]);
+            }
+
             $this->redirectRoute('participant.tickets');
         }
     }

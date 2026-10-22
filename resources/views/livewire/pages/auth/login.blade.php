@@ -41,6 +41,15 @@
                     required
                 />
                 @error('password') <span class="text-[11px] text-rose-500 mt-0.5 block">{{ $message }}</span> @enderror
+
+                <div class="mt-2 rounded-xl bg-indigo-50/80 border border-indigo-100 p-2.5 text-[11px] text-indigo-900 flex items-start gap-2">
+                    <svg class="h-4 w-4 text-indigo-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>
+                        Mendaftar langsung via form workshop? Password default Anda adalah <strong>Nomor WhatsApp</strong> yang Anda daftarkan.
+                    </span>
+                </div>
             </div>
 
             <div class="flex items-center justify-between text-xs pt-1">
