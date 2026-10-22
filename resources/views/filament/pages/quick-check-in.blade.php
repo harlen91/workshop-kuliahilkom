@@ -47,15 +47,84 @@
         </div>
 
         <!-- Check-In Scanner Box -->
-        <div class="bg-gradient-to-r from-indigo-900 to-slate-900 text-white p-6 rounded-2xl shadow-lg">
+        <div 
+            x-data="{ 
+                cameraOpen: false, 
+                scanner: null,
+                cameraError: '',
+                startCamera() {
+                    this.cameraOpen = true;
+                    this.cameraError = '';
+                    this.$nextTick(() => {
+                        if (!window.Html5Qrcode) {
+                            const script = document.createElement('script');
+                            script.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+                            script.onload = () => this.initScanner();
+                            document.head.appendChild(script);
+                        } else {
+                            this.initScanner();
+                        }
+                    });
+                },
+                initScanner() {
+                    try {
+                        this.scanner = new Html5Qrcode('qr-camera-stream');
+                        this.scanner.start(
+                            { facingMode: 'environment' },
+                            { fps: 10, qrbox: { width: 220, height: 220 } },
+                            (decodedText) => {
+                                @this.set('ticketCode', decodedText);
+                                @this.call('processCheckIn');
+                                this.stopCamera();
+                            },
+                            (error) => {}
+                        ).catch(err => {
+                            this.cameraError = 'Izin kamera ditolak atau tidak ditemukan: ' + err;
+                        });
+                    } catch (e) {
+                        this.cameraError = 'Gagal inisialisasi scanner kamera: ' + e;
+                    }
+                },
+                stopCamera() {
+                    if (this.scanner) {
+                        this.scanner.stop().then(() => {
+                            this.scanner.clear();
+                            this.scanner = null;
+                            this.cameraOpen = false;
+                        }).catch(() => {
+                            this.scanner = null;
+                            this.cameraOpen = false;
+                        });
+                    } else {
+                        this.cameraOpen = false;
+                    }
+                }
+            }"
+            class="bg-gradient-to-r from-indigo-900 to-slate-900 text-white p-6 rounded-2xl shadow-lg"
+        >
             <div class="max-w-2xl mx-auto text-center space-y-4">
                 <div class="inline-flex items-center justify-center p-3 bg-indigo-500/20 border border-indigo-400/30 rounded-2xl">
                     <x-heroicon-o-qr-code class="w-8 h-8 text-indigo-300" />
                 </div>
                 <h2 class="text-xl font-bold tracking-tight">Scan Barcode / Masukkan Kode Tiket</h2>
                 <p class="text-xs text-indigo-200 max-w-md mx-auto">
-                    Arahkan scanner ke QR Code peserta atau ketik kode tiket (misal: <code class="bg-indigo-800/60 px-2 py-0.5 rounded text-white font-mono">TKT-xxxx</code>) lalu tekan <strong>Enter</strong>.
+                    Arahkan scanner ke QR Code peserta, gunakan kamera HP/laptop, atau ketik kode tiket (misal: <code class="bg-indigo-800/60 px-2 py-0.5 rounded text-white font-mono">TKT-xxxx</code>) lalu tekan <strong>Enter</strong>.
                 </p>
+
+                <!-- Camera Stream Viewfinder -->
+                <div x-show="cameraOpen" x-cloak class="my-4 max-w-sm mx-auto overflow-hidden rounded-2xl border-2 border-indigo-400 bg-black p-2 shadow-2xl">
+                    <div id="qr-camera-stream" class="w-full"></div>
+                    <template x-if="cameraError">
+                        <div class="p-2 text-xs text-rose-300" x-text="cameraError"></div>
+                    </template>
+                    <button 
+                        type="button" 
+                        @click="stopCamera()" 
+                        class="mt-2 w-full py-1.5 bg-rose-600 hover:bg-rose-700 text-xs font-bold text-white rounded-lg transition"
+                    >
+                        Tutup Kamera
+                    </button>
+                </div>
 
                 <form wire:submit.prevent="processCheckIn" class="flex flex-col sm:flex-row gap-2 justify-center max-w-lg mx-auto pt-2">
                     <input 
@@ -73,6 +142,21 @@
                         <span>Verifikasi</span>
                     </button>
                 </form>
+
+                <div class="pt-1 flex items-center justify-center gap-3">
+                    <button 
+                        type="button" 
+                        x-show="!cameraOpen"
+                        @click="startCamera()" 
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-semibold text-white rounded-lg transition"
+                    >
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span>Buka Kamera Scanner HP/Laptop</span>
+                    </button>
+                </div>
 
                 <div wire:loading wire:target="processCheckIn" class="text-xs text-indigo-300 animate-pulse font-mono">
                     Sedang memverifikasi data tiket...

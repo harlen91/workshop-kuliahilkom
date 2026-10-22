@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class Registration extends Model
 {
@@ -80,5 +81,26 @@ class Registration extends Model
             'attended_at' => now(),
             'certificate_code' => $this->certificate_code ?: 'CERT-'.date('Ymd').'-'.Str::upper(Str::random(6)),
         ]);
+    }
+
+    /**
+     * Generate scannable QR Code SVG for ticket check-in.
+     */
+    public function getQrCodeSvgAttribute(): string
+    {
+        if (empty($this->ticket_code)) {
+            return '';
+        }
+
+        try {
+            $svg = (string) QrCode::size(140)
+                ->margin(1)
+                ->color(15, 23, 42)
+                ->generate($this->ticket_code);
+
+            return (string) preg_replace('/<\?xml.*?\?>/', '', $svg);
+        } catch (\Throwable) {
+            return '';
+        }
     }
 }

@@ -52,15 +52,21 @@ class QuickCheckIn extends Page
      */
     public function processCheckIn(): void
     {
-        $code = trim(strtoupper($this->ticketCode));
+        $rawCode = trim((string) $this->ticketCode);
 
-        if (empty($code)) {
+        if (empty($rawCode)) {
             Notification::make()
                 ->title('Kode tiket tidak boleh kosong')
                 ->warning()
                 ->send();
 
             return;
+        }
+
+        if (preg_match('/(TKT-[A-Z0-9\-]+)/i', $rawCode, $matches)) {
+            $code = strtoupper($matches[1]);
+        } else {
+            $code = strtoupper($rawCode);
         }
 
         $query = Registration::with(['user', 'workshop', 'order'])

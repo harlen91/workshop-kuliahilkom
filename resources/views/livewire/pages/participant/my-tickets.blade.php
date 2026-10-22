@@ -247,54 +247,16 @@
                                     </div>
 
                                     <!-- QR Code Graphic -->
-                                    <div class="mt-4 mx-auto w-36 h-36 bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-center">
-                                        <!-- SVG QR Code representation with ticket payload -->
-                                        <svg viewBox="0 0 100 100" class="w-full h-full text-slate-950 fill-current">
-                                            <!-- Corner Squares -->
-                                            <rect x="0" y="0" width="30" height="30" />
-                                            <rect x="5" y="5" width="20" height="20" fill="white" />
-                                            <rect x="10" y="10" width="10" height="10" />
-
-                                            <rect x="70" y="0" width="30" height="30" />
-                                            <rect x="75" y="5" width="20" height="20" fill="white" />
-                                            <rect x="80" y="10" width="10" height="10" />
-
-                                            <rect x="0" y="70" width="30" height="30" />
-                                            <rect x="5" y="75" width="20" height="20" fill="white" />
-                                            <rect x="10" y="80" width="10" height="10" />
-
-                                            <!-- Matrix Dots -->
-                                            <rect x="35" y="5" width="5" height="5" />
-                                            <rect x="45" y="5" width="10" height="5" />
-                                            <rect x="60" y="5" width="5" height="5" />
-                                            <rect x="35" y="15" width="15" height="5" />
-                                            <rect x="55" y="15" width="10" height="5" />
-                                            <rect x="40" y="25" width="5" height="5" />
-                                            <rect x="50" y="25" width="15" height="5" />
-
-                                            <rect x="5" y="35" width="10" height="5" />
-                                            <rect x="20" y="35" width="5" height="5" />
-                                            <rect x="35" y="35" width="10" height="10" />
-                                            <rect x="55" y="35" width="5" height="15" />
-                                            <rect x="70" y="35" width="15" height="5" />
-                                            <rect x="90" y="35" width="5" height="10" />
-
-                                            <rect x="5" y="45" width="5" height="10" />
-                                            <rect x="15" y="45" width="15" height="5" />
-                                            <rect x="75" y="45" width="10" height="10" />
-
-                                            <rect x="5" y="60" width="20" height="5" />
-                                            <rect x="35" y="55" width="15" height="5" />
-                                            <rect x="45" y="65" width="10" height="10" />
-                                            <rect x="65" y="60" width="15" height="5" />
-                                            <rect x="85" y="60" width="10" height="5" />
-
-                                            <rect x="35" y="75" width="5" height="15" />
-                                            <rect x="45" y="80" width="15" height="5" />
-                                            <rect x="65" y="75" width="10" height="15" />
-                                            <rect x="80" y="80" width="15" height="5" />
-                                            <rect x="85" y="90" width="10" height="5" />
-                                        </svg>
+                                    <div class="mt-4 mx-auto w-36 h-36 bg-white p-2 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-center overflow-hidden">
+                                        @if($reg->qr_code_svg)
+                                            <div class="w-full h-full flex items-center justify-center [&>svg]:w-full [&>svg]:h-full">
+                                                {!! $reg->qr_code_svg !!}
+                                            </div>
+                                        @else
+                                            <div class="text-xs text-slate-400 font-mono text-center p-2">
+                                                {{ $reg->ticket_code }}
+                                            </div>
+                                        @endif
                                     </div>
                                     <div class="text-[11px] text-slate-500 mt-2 font-mono">Scan untuk Presensi</div>
                                 </div>
