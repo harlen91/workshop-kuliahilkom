@@ -12,9 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('workshops', function (Blueprint $table): void {
-            $table->string('attendance_mode', 20)->default('token')->after('meeting_password');
-            $table->string('attendance_token', 50)->nullable()->after('attendance_mode');
-            $table->boolean('attendance_is_active')->default(true)->after('attendance_token');
+            if (! Schema::hasColumn('workshops', 'attendance_mode')) {
+                $table->string('attendance_mode', 20)->default('token');
+            }
+            if (! Schema::hasColumn('workshops', 'attendance_token')) {
+                $table->string('attendance_token', 50)->nullable();
+            }
+            if (! Schema::hasColumn('workshops', 'attendance_is_active')) {
+                $table->boolean('attendance_is_active')->default(true);
+            }
         });
     }
 
@@ -24,7 +30,16 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('workshops', function (Blueprint $table): void {
-            $table->dropColumn(['attendance_mode', 'attendance_token', 'attendance_is_active']);
+            $columnsToDrop = [];
+            foreach (['attendance_mode', 'attendance_token', 'attendance_is_active'] as $column) {
+                if (Schema::hasColumn('workshops', $column)) {
+                    $columnsToDrop[] = $column;
+                }
+            }
+
+            if (! empty($columnsToDrop)) {
+                $table->dropColumn($columnsToDrop);
+            }
         });
     }
 };
