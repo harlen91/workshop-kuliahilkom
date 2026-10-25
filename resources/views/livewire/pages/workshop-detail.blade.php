@@ -215,6 +215,12 @@
                             </svg>
                             <span>Akses Materi Slide & Source Code Proyek</span>
                         </div>
+                        <div class="flex items-center gap-2">
+                            <svg class="h-4 w-4 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Grup Komunikasi dan Diskusi WhatsApp Peserta</span>
+                        </div>
                     </div>
 
                     <!-- Action Button -->

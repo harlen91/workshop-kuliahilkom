@@ -6,6 +6,7 @@ use App\Filament\Resources\WorkshopResource\Pages;
 use App\Models\Workshop;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -141,6 +142,20 @@ class WorkshopResource extends Resource
                                     Forms\Components\TextInput::make('meeting_password')
                                         ->label('Passcode / Password Meeting')
                                         ->helperText('Password untuk join room (opsional).'),
+                                    Forms\Components\TextInput::make('whatsapp_group_url')
+                                        ->label('Link WhatsApp Group Peserta')
+                                        ->placeholder('https://chat.whatsapp.com/ABC123xyz...')
+                                        ->helperText('Tautan undangan grup WA peserta. Otomatis dibagikan ke tiket peserta dan template broadcast.')
+                                        ->prefixIcon('heroicon-o-chat-bubble-left-right')
+                                        ->maxLength(255)
+                                        ->columnSpanFull()
+                                        ->suffixAction(
+                                            Forms\Components\Actions\Action::make('openWhatsappGroup')
+                                                ->icon('heroicon-m-arrow-top-right-on-square')
+                                                ->tooltip('Uji Buka Link')
+                                                ->visible(fn (?string $state): bool => ! empty($state))
+                                                ->url(fn (?string $state): ?string => $state, shouldOpenInNewTab: true)
+                                        ),
                                 ]),
                             ]),
 
@@ -373,6 +388,28 @@ class WorkshopResource extends Resource
                             'contacts' => $contacts,
                             'phoneList' => $phoneList,
                         ]);
+                    }),
+                Tables\Actions\Action::make('edit_wa_group')
+                    ->label('Link WA Grup')
+                    ->icon('heroicon-o-link')
+                    ->color(fn (Workshop $record): string => $record->hasWhatsappGroup() ? 'success' : 'gray')
+                    ->tooltip(fn (Workshop $record): string => $record->hasWhatsappGroup() ? 'Link WA Grup: '.$record->whatsapp_group_url : 'Belum ada link WA grup')
+                    ->modalHeading(fn (Workshop $record): string => "Kelola Link WA Grup: {$record->title}")
+                    ->modalDescription('Atur link WhatsApp Group yang akan otomatis diterima oleh peserta.')
+                    ->form([
+                        Forms\Components\TextInput::make('whatsapp_group_url')
+                            ->label('Link WhatsApp Group Peserta')
+                            ->placeholder('https://chat.whatsapp.com/...')
+                            ->helperText('Tautan ini otomatis dibagikan di halaman tiket peserta dan pesan broadcast panitia.')
+                            ->prefixIcon('heroicon-o-chat-bubble-left-right')
+                            ->default(fn (Workshop $record): ?string => $record->whatsapp_group_url),
+                    ])
+                    ->action(function (Workshop $record, array $data): void {
+                        $record->update(['whatsapp_group_url' => $data['whatsapp_group_url']]);
+                        Notification::make()
+                            ->title('Link WhatsApp Group berhasil diperbarui')
+                            ->success()
+                            ->send();
                     }),
                 Tables\Actions\EditAction::make(),
             ])

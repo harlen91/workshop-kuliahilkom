@@ -33,6 +33,7 @@ class Workshop extends Model
         'platform',
         'meeting_url',
         'meeting_password',
+        'whatsapp_group_url',
         'is_paid',
         'price',
         'original_price',
@@ -306,6 +307,65 @@ class Workshop extends Model
                 return $url;
             }
         );
+    }
+
+    /**
+     * Ensure whatsapp_group_url always has valid http/https protocol scheme.
+     *
+     * @return Attribute<string|null, string|null>
+     */
+    protected function whatsappGroupUrl(): Attribute
+    {
+        return Attribute::make(
+            get: function (?string $value): ?string {
+                if (empty($value) || trim($value) === '#' || trim($value) === '') {
+                    return null;
+                }
+
+                $url = trim($value);
+
+                if (! str_starts_with($url, 'http://') && ! str_starts_with($url, 'https://')) {
+                    return 'https://'.ltrim($url, '/');
+                }
+
+                return $url;
+            },
+            set: function (?string $value): ?string {
+                if (empty($value) || trim($value) === '#' || trim($value) === '') {
+                    return null;
+                }
+
+                $url = trim($value);
+
+                if (! str_starts_with($url, 'http://') && ! str_starts_with($url, 'https://')) {
+                    return 'https://'.ltrim($url, '/');
+                }
+
+                return $url;
+            }
+        );
+    }
+
+    /**
+     * Determine whether workshop has a WhatsApp Group URL configured.
+     */
+    public function hasWhatsappGroup(): bool
+    {
+        return ! empty($this->whatsapp_group_url);
+    }
+
+    /**
+     * Generate standard invitation text for WhatsApp Group.
+     */
+    public function getWhatsappGroupInvitationText(?string $participantName = null): string
+    {
+        $greeting = $participantName ? "Halo {$participantName}," : 'Halo Rekan Peserta,';
+
+        if (! $this->hasWhatsappGroup()) {
+            return "{$greeting} informasi tautan grup WhatsApp untuk event '{$this->title}' akan diumumkan segera oleh panitia.";
+        }
+
+        return "{$greeting} silakan bergabung ke Grup WhatsApp Peserta untuk event '{$this->title}' melalui tautan berikut:\n{$this->whatsapp_group_url}\n\nSampai jumpa di ruang workshop!";
     }
 
     /**

@@ -169,7 +169,10 @@ class RegistrationsRelationManager extends RelationManager
                             $phone = '62'.substr($phone, 1);
                         }
                         $workshop = $record->workshop;
-                        $text = "Halo {$record->user->name}, tiket workshop '{$workshop->title}' Anda aktif dengan Kode: {$record->ticket_code}. Jangan lupa hadir ya!";
+                        $groupInvite = ($workshop && $workshop->hasWhatsappGroup())
+                            ? "\n\nSilakan bergabung ke Grup WhatsApp Peserta:\n{$workshop->whatsapp_group_url}"
+                            : '';
+                        $text = "Halo {$record->user->name}, tiket workshop '{$workshop->title}' Anda aktif dengan Kode: {$record->ticket_code}.{$groupInvite}\n\nJangan lupa hadir ya!";
 
                         return "https://wa.me/{$phone}?text=".urlencode($text);
                     }, shouldOpenInNewTab: true),

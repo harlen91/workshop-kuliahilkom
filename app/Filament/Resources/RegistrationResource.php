@@ -201,7 +201,10 @@ class RegistrationResource extends Resource
                             $phone = '62'.substr($phone, 1);
                         }
                         $workshop = $record->workshop;
-                        $text = "Halo {$record->user->name}, tiket event '{$workshop?->title}' Anda telah terdaftar. Kode Tiket: {$record->ticket_code}.";
+                        $groupInvite = ($workshop && $workshop->hasWhatsappGroup())
+                            ? "\n\nSilakan bergabung ke Grup WhatsApp Peserta:\n{$workshop->whatsapp_group_url}"
+                            : '';
+                        $text = "Halo {$record->user->name}, tiket event '{$workshop?->title}' Anda telah terdaftar. Kode Tiket: {$record->ticket_code}.{$groupInvite}\n\nSampai jumpa di acara!";
 
                         return "https://wa.me/{$phone}?text=".urlencode($text);
                     }, shouldOpenInNewTab: true),

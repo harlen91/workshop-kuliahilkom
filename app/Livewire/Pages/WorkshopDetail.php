@@ -158,7 +158,7 @@ class WorkshopDetail extends Component
             });
 
             $this->showRegisterModal = false;
-            session()->flash('success', 'Selamat! Pendaftaran gratis Anda berhasil dikonfirmasi. Tiket dan link Zoom telah tersedia di bawah.');
+            session()->flash('success', 'Selamat! Pendaftaran gratis Anda berhasil dikonfirmasi. Tiket dan link Grup WhatsApp telah tersedia di bawah.');
 
             if ($this->isNewAccount || ($user->created_at && $user->created_at->diffInMinutes(now()) <= 15)) {
                 session()->flash('account_created_notice', [
@@ -243,7 +243,7 @@ class WorkshopDetail extends Component
                 }
             }
 
-            session()->flash('success', 'Pembayaran berhasil! Tiket workshop Anda telah resmi terbit.');
+            session()->flash('success', 'Pembayaran berhasil! Tiket workshop Anda telah resmi terbit. Silakan bergabung ke Grup WhatsApp peserta di bawah.');
 
             $newAccountData = session()->pull('new_account_'.$order->order_code);
             if ($this->isNewAccount || $newAccountData || ($order->user && $order->user->created_at?->diffInMinutes(now()) <= 30)) {

@@ -238,6 +238,67 @@
                                     </div>
                                 </div>
 
+                                <!-- WhatsApp Group Community Box -->
+                                <div class="rounded-2xl border border-emerald-200/90 bg-emerald-50/60 p-4 sm:p-5">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-950">
+                                            <span class="flex h-2 w-2 rounded-full bg-emerald-500"></span>
+                                            Grup WhatsApp Peserta
+                                        </div>
+                                        <span class="text-[11px] text-emerald-800 font-semibold">Koordinasi & Informasi Kelas</span>
+                                    </div>
+
+                                    @if($ws->hasWhatsappGroup())
+                                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white/90 rounded-xl p-3 border border-emerald-200" x-data="{ copiedGroup: false }">
+                                            <div class="flex items-center gap-2.5 min-w-0">
+                                                <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-xs">
+                                                    <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.592 2.654-.696c1.029.575 1.84.883 2.806.883 3.18 0 5.767-2.587 5.767-5.766.001-3.182-2.585-5.766-5.767-5.766zm3.374 8.204c-.145.411-.845.772-1.178.809-.333.037-.732.147-2.484-.579-2.115-.877-3.468-3.056-3.573-3.197-.105-.141-.856-1.139-.856-2.171 0-1.032.54-1.541.732-1.751.192-.21.418-.263.558-.263.14 0 .279.002.401.008.129.006.302-.049.472.361.175.421.594 1.45.646 1.556.052.105.087.228.018.368-.07.14-.105.228-.21.35-.105.123-.221.275-.316.368-.105.105-.215.22-.093.43.122.21.544.898 1.168 1.454.802.714 1.478.935 1.688 1.04.21.105.332.088.455-.053.123-.141.524-.613.664-.823.14-.21.279-.175.472-.105.192.07 1.222.577 1.432.682.21.105.35.158.401.246.052.088.052.508-.093.919z"/>
+                                                        <path d="M12 2C6.477 2 2 6.477 2 12c0 1.891.526 3.66 1.442 5.176L2 22l4.982-1.408C8.423 21.493 10.153 22 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18c-1.637 0-3.16-.484-4.444-1.317l-.319-.206-3.303.934.935-3.21-.219-.333C3.784 14.542 3.3 13.314 3.3 12c0-4.797 3.903-8.7 8.7-8.7s8.7 3.903 8.7 8.7-3.903 8.7-8.7 8.7z"/>
+                                                    </svg>
+                                                </div>
+                                                <div class="truncate">
+                                                    <div class="text-xs font-bold text-slate-900 truncate">Grup Diskusi & Pengumuman</div>
+                                                    <div class="text-[11px] text-slate-500 font-mono truncate">{{ $ws->whatsapp_group_url }}</div>
+                                                </div>
+                                            </div>
+
+                                            <div class="flex items-center gap-2 shrink-0">
+                                                <button 
+                                                    type="button"
+                                                    @click="navigator.clipboard.writeText('{{ $ws->whatsapp_group_url }}'); copiedGroup = true; setTimeout(() => copiedGroup = false, 2500)"
+                                                    class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-emerald-300 bg-white hover:bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 transition-colors shadow-2xs cursor-pointer"
+                                                >
+                                                    <svg class="h-3.5 w-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                                    </svg>
+                                                    <span x-show="!copiedGroup">Salin Link</span>
+                                                    <span x-show="copiedGroup" class="text-emerald-700 font-bold">Tersalin!</span>
+                                                </button>
+
+                                                <a 
+                                                    href="{{ $ws->whatsapp_group_url }}" 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 px-4 py-2 text-xs font-bold text-white shadow-sm shadow-emerald-600/25 transition-all"
+                                                >
+                                                    <span>Gabung Grup WA</span>
+                                                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                    </svg>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div class="flex items-center gap-2 rounded-xl bg-white/70 border border-emerald-200/80 px-3.5 py-2.5 text-xs text-emerald-900">
+                                            <svg class="h-4 w-4 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <span>Tautan grup WhatsApp akan segera dibagikan oleh panitia sebelum acara dimulai.</span>
+                                        </div>
+                                    @endif
+                                </div>
+
                                 <!-- Post Event Resources (Recording & Certificate) -->
                                 @if($reg->certificate_code || $ws->recording_url || $ws->materials_url)
                                     <div class="border-t border-slate-100 pt-3 flex flex-wrap items-center gap-3 text-xs">
