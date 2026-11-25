@@ -214,7 +214,41 @@ class WorkshopResource extends Resource
                             ->schema([
                                 Forms\Components\Toggle::make('certificate_enabled')
                                     ->label('Menyediakan E-Sertifikat')
+                                    ->live()
                                     ->default(true),
+                                Forms\Components\Section::make('Pengaturan Template E-Sertifikat PDF')
+                                    ->description('Kustomisasi nama penandatangan, tanda tangan, atau gambar latar belakang sertifikat (opsional).')
+                                    ->visible(fn (Forms\Get $get): bool => (bool) $get('certificate_enabled'))
+                                    ->schema([
+                                        Forms\Components\Grid::make(2)->schema([
+                                            Forms\Components\TextInput::make('certificate_signer_name')
+                                                ->label('Nama Penandatangan Sertifikat')
+                                                ->placeholder('Default: Nama Instruktur / Tim KuliahIlkom')
+                                                ->maxLength(255),
+                                            Forms\Components\TextInput::make('certificate_signer_title')
+                                                ->label('Jabatan Penandatangan')
+                                                ->placeholder('Default: Jabatan Instruktur / Penyelenggara')
+                                                ->maxLength(255),
+                                        ]),
+                                        Forms\Components\Grid::make(2)->schema([
+                                            Forms\Components\FileUpload::make('certificate_signature_path')
+                                                ->label('Gambar Tanda Tangan (PNG/JPG)')
+                                                ->disk('public')
+                                                ->directory('workshops/certificates/signatures')
+                                                ->image()
+                                                ->acceptedFileTypes(['image/png', 'image/jpeg'])
+                                                ->maxSize(2048)
+                                                ->helperText('Disarankan PNG transparan. Maks. 2MB.'),
+                                            Forms\Components\FileUpload::make('certificate_background_path')
+                                                ->label('Background Template Sertifikat (A4 Landscape)')
+                                                ->disk('public')
+                                                ->directory('workshops/certificates/backgrounds')
+                                                ->image()
+                                                ->acceptedFileTypes(['image/png', 'image/jpeg'])
+                                                ->maxSize(5120)
+                                                ->helperText('Opsional. Kosongkan untuk menggunakan desain bingkai bawaan. Maks. 5MB.'),
+                                        ]),
+                                    ]),
                                 Forms\Components\TextInput::make('recording_url')
                                     ->label('Link Rekaman Video')
                                     ->placeholder('https://youtube.com/watch?v=...')

@@ -69,6 +69,18 @@ class Registration extends Model
         return $this->belongsTo(Workshop::class);
     }
 
+    /**
+     * Generate a unique certificate verification code.
+     */
+    public static function generateCertificateCode(): string
+    {
+        do {
+            $code = 'CERT-'.date('Ymd').'-'.Str::upper(Str::random(6));
+        } while (self::where('certificate_code', $code)->exists());
+
+        return $code;
+    }
+
     public function isAttended(): bool
     {
         return $this->attendance_status === 'attended';
@@ -76,11 +88,24 @@ class Registration extends Model
 
     public function markAttended(): void
     {
+        $shouldIssueCertificate = $this->workshop === null || (bool) $this->workshop->certificate_enabled;
+
         $this->update([
             'attendance_status' => 'attended',
             'attended_at' => now(),
-            'certificate_code' => $this->certificate_code ?: 'CERT-'.date('Ymd').'-'.Str::upper(Str::random(6)),
+            'certificate_code' => $shouldIssueCertificate
+                ? ($this->certificate_code ?: self::generateCertificateCode())
+                : $this->certificate_code,
         ]);
+    }
+
+    /**
+     * Determine whether this registration is eligible for a PDF e-certificate.
+     */
+    public function hasCertificate(): bool
+    {
+        return (bool) ($this->workshop?->certificate_enabled ?? false)
+            && filled($this->certificate_code);
     }
 
     /**

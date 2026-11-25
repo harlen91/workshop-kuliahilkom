@@ -41,4 +41,12 @@
             </div>
         @endif
     </div>
+
+    @if($record->hasCertificate())
+        <div>
+            <a href="{{ route('certificates.download', $record) }}" class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 transition-colors">
+                Unduh E-Sertifikat (PDF)
+            </a>
+        </div>
+    @endif
 </div>

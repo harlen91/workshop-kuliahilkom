@@ -200,6 +200,7 @@
                     <ul class="space-y-2 text-xs sm:text-sm">
                         <li><a href="{{ route('home') }}" class="hover:text-indigo-600 transition-colors">Katalog Workshop</a></li>
                         <li><a href="{{ route('participant.tickets') }}" class="hover:text-indigo-600 transition-colors">Cek Tiket Saya</a></li>
+                        <li><a href="{{ route('certificates.verify') }}" class="hover:text-indigo-600 transition-colors">Verifikasi Sertifikat</a></li>
                         <li><a href="/admin" class="hover:text-indigo-600 transition-colors">Admin Dashboard</a></li>
                         <li><a href="{{ route('login') }}" class="hover:text-indigo-600 transition-colors">Login Akun</a></li>
                     </ul>

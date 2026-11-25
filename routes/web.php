@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\MidtransWebhookController;
 use App\Http\Controllers\SitemapController;
 use App\Livewire\Pages\Auth\Login;
@@ -14,6 +15,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', Home::class)->name('home');
 Route::get('/workshop/{slug}', WorkshopDetail::class)->name('workshop.detail');
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+Route::get('/certificates/verify', [CertificateController::class, 'verify'])
+    ->middleware('throttle:60,1')
+    ->name('certificates.verify');
 
 // Guest Auth Routes
 Route::middleware('guest')->group(function (): void {
@@ -33,6 +37,10 @@ Route::post('/logout', function () {
 // Participant Portal Protected Routes
 Route::middleware('auth')->group(function (): void {
     Route::get('/participant/my-tickets', MyTickets::class)->name('participant.tickets');
+    Route::get('/certificates/{registration}/download', [CertificateController::class, 'download'])
+        ->name('certificates.download');
+    Route::get('/certificates/{registration}/preview', [CertificateController::class, 'preview'])
+        ->name('certificates.preview');
 });
 
 // Midtrans Webhook Notification Handlers

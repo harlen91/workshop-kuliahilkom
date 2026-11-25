@@ -300,15 +300,24 @@
                                 </div>
 
                                 <!-- Post Event Resources (Recording & Certificate) -->
-                                @if($reg->certificate_code || $ws->recording_url || $ws->materials_url)
+                                @if($reg->hasCertificate() || $ws->recording_url || $ws->materials_url)
                                     <div class="border-t border-slate-100 pt-3 flex flex-wrap items-center gap-3 text-xs">
-                                        @if($reg->certificate_code)
+                                        @if($reg->hasCertificate())
                                             <div class="rounded-lg bg-purple-50 border border-purple-200 px-3 py-1.5 text-purple-700 flex items-center gap-1.5 font-medium">
                                                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138z" />
                                                 </svg>
                                                 <span>No. Sertifikat: <strong>{{ $reg->certificate_code }}</strong></span>
                                             </div>
+                                            <a href="{{ route('certificates.download', $reg) }}" class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 font-semibold text-white shadow-2xs transition-colors hover:bg-emerald-700">
+                                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                </svg>
+                                                Unduh Sertifikat (PDF)
+                                            </a>
+                                            <a href="{{ route('certificates.verify', ['code' => $reg->certificate_code]) }}" target="_blank" class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 font-medium text-slate-600 transition-colors hover:border-indigo-300 hover:text-indigo-600">
+                                                Verifikasi
+                                            </a>
                                         @endif
 
                                         @if($ws->recording_url)
@@ -346,10 +355,16 @@
                                             <div class="mt-0.5 text-[11px] text-emerald-700">
                                                 {{ $reg->attended_at?->isoFormat('D MMM Y, HH:mm') ?? now()->isoFormat('D MMM Y, HH:mm') }} WIB
                                             </div>
-                                            @if($reg->certificate_code)
+                                            @if($reg->hasCertificate())
                                                 <div class="mt-2.5 pt-2 border-t border-emerald-200/70 text-[10px] font-mono font-medium text-emerald-800 truncate" title="{{ $reg->certificate_code }}">
                                                     ID: {{ $reg->certificate_code }}
                                                 </div>
+                                                <a href="{{ route('certificates.download', $reg) }}" class="mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-xs transition-colors hover:bg-emerald-700">
+                                                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                    </svg>
+                                                    Unduh E-Sertifikat (PDF)
+                                                </a>
                                             @endif
                                         </div>
                                     @else

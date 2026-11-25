@@ -147,10 +147,7 @@ class RegistrationsRelationManager extends RelationManager
                     ->visible(fn (Registration $record): bool => $record->attendance_status !== 'attended')
                     ->requiresConfirmation()
                     ->action(function (Registration $record): void {
-                        $record->update([
-                            'attendance_status' => 'attended',
-                            'attended_at' => now(),
-                        ]);
+                        $record->markAttended();
 
                         Notification::make()
                             ->title('Presensi berhasil dicatat')
@@ -158,6 +155,12 @@ class RegistrationsRelationManager extends RelationManager
                             ->success()
                             ->send();
                     }),
+                Tables\Actions\Action::make('download_certificate')
+                    ->label('Sertifikat PDF')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('success')
+                    ->visible(fn (Registration $record): bool => (bool) $this->getOwnerRecord()->certificate_enabled && filled($record->certificate_code))
+                    ->url(fn (Registration $record): string => route('certificates.download', $record)),
                 Tables\Actions\Action::make('whatsapp')
                     ->label('Chat WA')
                     ->icon('heroicon-o-chat-bubble-left-right')
@@ -186,10 +189,7 @@ class RegistrationsRelationManager extends RelationManager
                         ->color('success')
                         ->requiresConfirmation()
                         ->action(function (Collection $records): void {
-                            $records->each(fn (Registration $r) => $r->update([
-                                'attendance_status' => 'attended',
-                                'attended_at' => now(),
-                            ]));
+                            $records->each(fn (Registration $r) => $r->markAttended());
                             Notification::make()
                                 ->title(count($records).' peserta berhasil ditandai hadir')
                                 ->success()

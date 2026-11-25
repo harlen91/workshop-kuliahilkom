@@ -209,6 +209,13 @@ class RegistrationResource extends Resource
                         return "https://wa.me/{$phone}?text=".urlencode($text);
                     }, shouldOpenInNewTab: true),
 
+                Tables\Actions\Action::make('download_certificate')
+                    ->label('Sertifikat PDF')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('success')
+                    ->visible(fn (Registration $record): bool => $record->hasCertificate())
+                    ->url(fn (Registration $record): string => route('certificates.download', $record)),
+
                 Tables\Actions\Action::make('checkIn')
                     ->label('Check-In')
                     ->icon('heroicon-o-check-circle')
