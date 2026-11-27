@@ -81,7 +81,6 @@
 
         .content-wrapper {
             padding: 18mm 24mm 15mm 24mm;
-            width: 100%;
         }
 
         .header-table {
