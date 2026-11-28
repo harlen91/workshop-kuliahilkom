@@ -7,6 +7,7 @@ use App\Models\Registration;
 use App\Models\Speaker;
 use App\Models\User;
 use App\Models\Workshop;
+use App\Services\CertificateService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -277,6 +278,58 @@ class CertificatePdfTest extends TestCase
         $response->assertStatus(200);
         $response->assertHeader('Content-Type', 'application/pdf');
         $this->assertStringStartsWith('%PDF-', $response->getContent());
+    }
+
+    public function test_pdf_generation_supports_custom_stamp_image_with_and_without_signature(): void
+    {
+        Storage::fake('public');
+
+        $tinyPng = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
+        Storage::disk('public')->put('workshops/certificates/signatures/sign.png', $tinyPng);
+        Storage::disk('public')->put('workshops/certificates/stamps/stamp.png', $tinyPng);
+        Storage::disk('public')->put('workshops/certificates/backgrounds/bg.png', $tinyPng);
+
+        $participant = User::factory()->create(['role' => 'participant']);
+        $workshopWithoutStamp = $this->createWorkshop();
+        $regWithoutStamp = $this->createRegistration($participant, $workshopWithoutStamp, [
+            'certificate_code' => 'CERT-20261128-NOSTMP',
+        ]);
+
+        $service = app(CertificateService::class);
+        $this->assertNull($service->buildCertificateData($regWithoutStamp)['stampDataUri']);
+
+        // 1. Stamp + signature + background together
+        $workshopWithBoth = $this->createWorkshop([
+            'certificate_signature_path' => 'workshops/certificates/signatures/sign.png',
+            'certificate_stamp_path' => 'workshops/certificates/stamps/stamp.png',
+            'certificate_background_path' => 'workshops/certificates/backgrounds/bg.png',
+        ]);
+        $regWithBoth = $this->createRegistration($participant, $workshopWithBoth, [
+            'certificate_code' => 'CERT-20261128-BOTH01',
+        ]);
+
+        $dataWithBoth = $service->buildCertificateData($regWithBoth);
+        $this->assertNotNull($dataWithBoth['stampDataUri']);
+        $this->assertStringStartsWith('data:image/png;base64,', $dataWithBoth['stampDataUri']);
+
+        $responseBoth = $this->actingAs($participant)->get(route('certificates.download', $regWithBoth));
+        $responseBoth->assertStatus(200);
+        $responseBoth->assertHeader('Content-Type', 'application/pdf');
+        $this->assertStringStartsWith('%PDF-', $responseBoth->getContent());
+
+        // 2. Stamp without signature image
+        $workshopStampOnly = $this->createWorkshop([
+            'certificate_signature_path' => null,
+            'certificate_stamp_path' => 'workshops/certificates/stamps/stamp.png',
+        ]);
+        $regStampOnly = $this->createRegistration($participant, $workshopStampOnly, [
+            'certificate_code' => 'CERT-20261128-STMP02',
+        ]);
+
+        $responseStampOnly = $this->actingAs($participant)->get(route('certificates.download', $regStampOnly));
+        $responseStampOnly->assertStatus(200);
+        $responseStampOnly->assertHeader('Content-Type', 'application/pdf');
+        $this->assertStringStartsWith('%PDF-', $responseStampOnly->getContent());
     }
 
     public function test_registration_policy_download_certificate_permissions(): void

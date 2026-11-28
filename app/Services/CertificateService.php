@@ -92,6 +92,7 @@ class CertificateService
      *     verificationUrl: string,
      *     qrCodeDataUri: ?string,
      *     signatureDataUri: ?string,
+     *     stampDataUri: ?string,
      *     backgroundDataUri: ?string,
      * }
      */
@@ -131,6 +132,7 @@ class CertificateService
             'verificationUrl' => $this->getVerificationUrl($registration),
             'qrCodeDataUri' => $this->generateVerificationQrDataUri($registration),
             'signatureDataUri' => $this->encodePublicImageToDataUri($workshop->certificate_signature_path),
+            'stampDataUri' => $this->encodePublicImageToDataUri($workshop->certificate_stamp_path),
             'backgroundDataUri' => $this->encodePublicImageToDataUri($workshop->certificate_background_path),
         ];
     }

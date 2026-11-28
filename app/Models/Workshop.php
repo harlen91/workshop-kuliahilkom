@@ -44,6 +44,7 @@ class Workshop extends Model
         'certificate_signer_name',
         'certificate_signer_title',
         'certificate_signature_path',
+        'certificate_stamp_path',
         'certificate_background_path',
         'recording_url',
         'materials_url',

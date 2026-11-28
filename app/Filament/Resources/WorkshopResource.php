@@ -239,15 +239,24 @@ class WorkshopResource extends Resource
                                                 ->acceptedFileTypes(['image/png', 'image/jpeg'])
                                                 ->maxSize(2048)
                                                 ->helperText('Disarankan PNG transparan. Maks. 2MB.'),
-                                            Forms\Components\FileUpload::make('certificate_background_path')
-                                                ->label('Background Template Sertifikat (A4 Landscape)')
+                                            Forms\Components\FileUpload::make('certificate_stamp_path')
+                                                ->label('Gambar Stempel Resmi (PNG)')
                                                 ->disk('public')
-                                                ->directory('workshops/certificates/backgrounds')
+                                                ->directory('workshops/certificates/stamps')
                                                 ->image()
                                                 ->acceptedFileTypes(['image/png', 'image/jpeg'])
-                                                ->maxSize(5120)
-                                                ->helperText('Opsional. Kosongkan untuk menggunakan desain bingkai bawaan. Maks. 5MB.'),
+                                                ->maxSize(2048)
+                                                ->helperText('Disarankan PNG transparan (rasio 1:1). Otomatis dibubuhkan di sisi tanda tangan. Maks. 2MB.'),
                                         ]),
+                                        Forms\Components\FileUpload::make('certificate_background_path')
+                                            ->label('Background Template Sertifikat (A4 Landscape)')
+                                            ->disk('public')
+                                            ->directory('workshops/certificates/backgrounds')
+                                            ->image()
+                                            ->acceptedFileTypes(['image/png', 'image/jpeg'])
+                                            ->maxSize(5120)
+                                            ->helperText('Opsional. Kosongkan untuk menggunakan desain bingkai bawaan. Maks. 5MB.')
+                                            ->columnSpanFull(),
                                     ]),
                                 Forms\Components\TextInput::make('recording_url')
                                     ->label('Link Rekaman Video')
