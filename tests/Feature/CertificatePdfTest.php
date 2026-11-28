@@ -332,6 +332,49 @@ class CertificatePdfTest extends TestCase
         $this->assertStringStartsWith('%PDF-', $responseStampOnly->getContent());
     }
 
+    public function test_opaque_white_background_on_stamp_is_converted_to_transparent_while_background_stays_opaque(): void
+    {
+        Storage::fake('public');
+
+        $canvas = imagecreatetruecolor(40, 40);
+        $white = imagecolorallocate($canvas, 255, 255, 255);
+        $navy = imagecolorallocate($canvas, 15, 23, 42);
+        imagefilledrectangle($canvas, 0, 0, 39, 39, $white);
+        imagefilledrectangle($canvas, 12, 12, 27, 27, $navy);
+
+        ob_start();
+        imagepng($canvas);
+        $opaquePng = (string) ob_get_clean();
+
+        Storage::disk('public')->put('workshops/certificates/stamps/opaque-stamp.png', $opaquePng);
+        Storage::disk('public')->put('workshops/certificates/backgrounds/opaque-bg.png', $opaquePng);
+
+        $participant = User::factory()->create(['role' => 'participant']);
+        $workshop = $this->createWorkshop([
+            'certificate_stamp_path' => 'workshops/certificates/stamps/opaque-stamp.png',
+            'certificate_background_path' => 'workshops/certificates/backgrounds/opaque-bg.png',
+        ]);
+        $registration = $this->createRegistration($participant, $workshop, [
+            'certificate_code' => 'CERT-20261128-TRANS1',
+        ]);
+
+        $data = app(CertificateService::class)->buildCertificateData($registration);
+
+        $stampBinary = base64_decode(str_replace('data:image/png;base64,', '', (string) $data['stampDataUri']));
+        $stampImg = imagecreatefromstring($stampBinary);
+        $this->assertInstanceOf(\GdImage::class, $stampImg);
+        $cornerAlpha = imagecolorsforindex($stampImg, imagecolorat($stampImg, 0, 0))['alpha'];
+        $centerAlpha = imagecolorsforindex($stampImg, imagecolorat($stampImg, 20, 20))['alpha'];
+        $this->assertSame(127, $cornerAlpha);
+        $this->assertSame(0, $centerAlpha);
+
+        $bgBinary = base64_decode(str_replace('data:image/png;base64,', '', (string) $data['backgroundDataUri']));
+        $bgImg = imagecreatefromstring($bgBinary);
+        $this->assertInstanceOf(\GdImage::class, $bgImg);
+        $bgCornerAlpha = imagecolorsforindex($bgImg, imagecolorat($bgImg, 0, 0))['alpha'];
+        $this->assertSame(0, $bgCornerAlpha);
+    }
+
     public function test_registration_policy_download_certificate_permissions(): void
     {
         $owner = User::factory()->create(['role' => 'participant']);

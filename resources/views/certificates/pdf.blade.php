@@ -289,31 +289,33 @@
 
         .signature-area {
             position: relative;
-            width: 66mm;
-            height: 52px;
+            width: 64mm;
+            height: 68px;
             margin: 0 auto 2px auto;
         }
 
         .signature-img {
             position: relative;
-            z-index: 2;
-            max-height: 48px;
-            max-width: 150px;
+            z-index: 1;
+            max-height: 66px;
+            max-width: 185px;
             margin-top: 2px;
         }
 
         .stamp-img {
             position: absolute;
-            left: 2mm;
+            left: 11mm;
             top: -10px;
-            width: 64px;
-            height: 64px;
-            opacity: 0.8;
-            z-index: 1;
+            width: 86px;
+            height: 86px;
+            opacity: 0.85;
+            z-index: 3;
         }
 
         .signature-line {
-            width: 56mm;
+            position: relative;
+            z-index: 1;
+            width: 58mm;
             border-top: 1.5px solid #1e293b;
             margin: 0 auto 4px auto;
         }
@@ -413,11 +415,11 @@
 
                     <td class="footer-cell-right">
                         <div class="signature-area">
-                            @if(! empty($stampDataUri))
-                                <img src="{{ $stampDataUri }}" alt="Stempel Resmi" class="stamp-img">
-                            @endif
                             @if($signatureDataUri)
                                 <img src="{{ $signatureDataUri }}" alt="Tanda Tangan" class="signature-img">
+                            @endif
+                            @if(! empty($stampDataUri))
+                                <img src="{{ $stampDataUri }}" alt="Stempel Resmi" class="stamp-img">
                             @endif
                         </div>
                         <div class="signature-line"></div>

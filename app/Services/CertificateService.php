@@ -46,7 +46,7 @@ class CertificateService
     /**
      * Encode an image stored on the public disk as a base64 data URI for DomPDF.
      */
-    public function encodePublicImageToDataUri(?string $path): ?string
+    public function encodePublicImageToDataUri(?string $path, bool $stripWhiteBackground = false): ?string
     {
         if (empty($path)) {
             return null;
@@ -66,6 +66,14 @@ class CertificateService
 
         if ($contents === null || $contents === '') {
             return null;
+        }
+
+        if ($stripWhiteBackground) {
+            $transparentUri = $this->stripWhiteBackgroundToTransparentPng($contents);
+
+            if ($transparentUri !== null) {
+                return $transparentUri;
+            }
         }
 
         $mime = $disk->mimeType($path) ?: 'image/png';
@@ -131,8 +139,8 @@ class CertificateService
             'speakerRole' => $workshop->speaker?->title_role,
             'verificationUrl' => $this->getVerificationUrl($registration),
             'qrCodeDataUri' => $this->generateVerificationQrDataUri($registration),
-            'signatureDataUri' => $this->encodePublicImageToDataUri($workshop->certificate_signature_path),
-            'stampDataUri' => $this->encodePublicImageToDataUri($workshop->certificate_stamp_path),
+            'signatureDataUri' => $this->encodePublicImageToDataUri($workshop->certificate_signature_path, stripWhiteBackground: true),
+            'stampDataUri' => $this->encodePublicImageToDataUri($workshop->certificate_stamp_path, stripWhiteBackground: true),
             'backgroundDataUri' => $this->encodePublicImageToDataUri($workshop->certificate_background_path),
         ];
     }
@@ -196,5 +204,111 @@ class CertificateService
         }
 
         return $start->translatedFormat('d F Y').' – '.$end->translatedFormat('d F Y');
+    }
+
+    /**
+     * Convert an opaque white-background signature or stamp image into a transparent PNG data URI.
+     */
+    private function stripWhiteBackgroundToTransparentPng(string $binary): ?string
+    {
+        if (! function_exists('imagecreatefromstring')) {
+            return null;
+        }
+
+        $source = @imagecreatefromstring($binary);
+
+        if (! $source instanceof \GdImage) {
+            return null;
+        }
+
+        $width = imagesx($source);
+        $height = imagesy($source);
+
+        if ($width <= 1 || $height <= 1) {
+            return null;
+        }
+
+        $maxDim = max($width, $height);
+
+        if ($maxDim > 600) {
+            $newWidth = max(1, (int) round($width * 600 / $maxDim));
+            $newHeight = max(1, (int) round($height * 600 / $maxDim));
+            $scaled = imagescale($source, $newWidth, $newHeight);
+
+            if ($scaled instanceof \GdImage) {
+                $source = $scaled;
+                $width = imagesx($source);
+                $height = imagesy($source);
+            }
+        }
+
+        $corners = [
+            [0, 0],
+            [$width - 1, 0],
+            [0, $height - 1],
+            [$width - 1, $height - 1],
+        ];
+
+        $whiteOpaqueCorners = 0;
+
+        foreach ($corners as [$cx, $cy]) {
+            $rgba = imagecolorsforindex($source, imagecolorat($source, $cx, $cy));
+
+            if ($rgba['alpha'] < 15 && $rgba['red'] >= 235 && $rgba['green'] >= 235 && $rgba['blue'] >= 235) {
+                $whiteOpaqueCorners++;
+            }
+        }
+
+        if ($whiteOpaqueCorners < 3) {
+            return null;
+        }
+
+        $dest = imagecreatetruecolor($width, $height);
+
+        if (! $dest instanceof \GdImage) {
+            return null;
+        }
+
+        imagealphablending($dest, false);
+        imagesavealpha($dest, true);
+
+        $fullyTransparent = imagecolorallocatealpha($dest, 255, 255, 255, 127);
+
+        for ($y = 0; $y < $height; $y++) {
+            for ($x = 0; $x < $width; $x++) {
+                $rgba = imagecolorsforindex($source, imagecolorat($source, $x, $y));
+                $r = $rgba['red'];
+                $g = $rgba['green'];
+                $b = $rgba['blue'];
+                $origAlpha = $rgba['alpha'];
+                $minChannel = min($r, $g, $b);
+
+                if ($minChannel >= 242) {
+                    imagesetpixel($dest, $x, $y, $fullyTransparent);
+
+                    continue;
+                }
+
+                if ($minChannel >= 210) {
+                    $softAlpha = (int) round((($minChannel - 210) / 32) * 127);
+                    $alpha = max($origAlpha, min(127, $softAlpha));
+                } else {
+                    $alpha = $origAlpha;
+                }
+
+                $color = imagecolorallocatealpha($dest, $r, $g, $b, $alpha);
+                imagesetpixel($dest, $x, $y, $color);
+            }
+        }
+
+        ob_start();
+        imagepng($dest, null, 6);
+        $png = ob_get_clean();
+
+        if (! is_string($png) || $png === '') {
+            return null;
+        }
+
+        return 'data:image/png;base64,'.base64_encode($png);
     }
 }
